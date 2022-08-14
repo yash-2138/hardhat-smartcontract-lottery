@@ -28,13 +28,13 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     const callBackGasLimit = networkConfig[chainId]["callBackGasLimit"]
     const interval = networkConfig[chainId]["interval"]
 
-    const args = [
+    const arguments = [
         vrfCoordinatorV2Address,
-        entranceFee,
-        gasLane,
         subscriptionId,
-        callBackGasLimit,
+        gasLane,
         interval,
+        entranceFee,
+        callBackGasLimit
     ]
     const raffle = await deploy("Raffle", {
         from: deployer,
