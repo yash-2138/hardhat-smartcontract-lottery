@@ -16,8 +16,14 @@ module.exports = {
       hardhat: {
         chain: 31337,
         blockConfirmations: 1,
-        // url:RINKBEY_RPC_URL,
-        // accounts: [PRIVATE_KEY],
+        
+        
+      },
+      rinkeby:{
+        chain: 4,
+        blockConfirmations: 1,
+        url:RINKBEY_RPC_URL,
+        accounts: [PRIVATE_KEY],
       }
     },
     solidity: "0.8.8",
