@@ -10,12 +10,9 @@ error Raffle__NotEnoughEthEnterd();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
 error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
-/**@title sample raffle contract
- * @author yash dhumal
- * @notice this contract is for creating an untamperable decentralized smart contract
- * @dev this implements chinlink keepers and chainlink vrf v2
- */
-abstract contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface{
+
+
+contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     //type declarations
     enum RaffleState {
         OPEN,
@@ -37,13 +34,10 @@ abstract contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface{
     uint256 private s_lastTimeStamp;
     uint256 private immutable i_interval;
 
-
     //events
     event RaffleEnter(address indexed player);
     event RequestedFaffleWinner(uint256 indexed requestId);
     event WinnerPicked(address indexed winner);
-
-
 
     constructor(
         address vrfCoordinatorV2,
@@ -62,11 +56,12 @@ abstract contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface{
         s_lastTimeStamp = block.timestamp;
         i_interval = interval;
     }
-    function enterRaffle() public payable{
-        if(msg.value < i_entranceFee){
+
+    function enterRaffle() public payable {
+        if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughEthEnterd();
         }
-        if(s_raffleState != RaffleState.OPEN){
+        if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__NotOpen();
         }
         s_players.push(payable(msg.sender));
@@ -74,29 +69,36 @@ abstract contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface{
         //emit an event when we update a dynamic array or mapping
         //named events with funciton name reversed
         emit RaffleEnter(msg.sender);
-
     }
 
-    /**
-     * @dev this is the function that the chainlink keeper nodes call they look for the `upkeepNeeded` to return true
-     * following should be true in  order to return true:
-     *  1.Our time interval should have passed
-     *  2.Lottery should have at least 1 player and should have some eth
-     *  3.Then our subscription is funded with LINK
-     *  4.Lottery should be in open state
-     */
-    function checkUpkeep(bytes memory /*checkData*/) public override returns(bool upkeepNeeded, bytes memory /*performData*/) {
+
+    function checkUpkeep(
+        bytes memory 
+    )
+        public
+        override
+        returns (
+            bool upkeepNeeded,
+            bytes memory 
+        )
+    {
         bool isOpen = (RaffleState.OPEN == s_raffleState);
-        bool timePassed = ((block.timestamp - s_lastTimeStamp)  > i_interval);
+        bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
         bool hasPlayers = (s_players.length > 0);
         bool hasBalance = address(this).balance > 0;
         upkeepNeeded = (isOpen && timePassed && hasBalance && hasPlayers);
     }
 
-    function performUpkeep(bytes calldata /*performData*/) external override{
-        (bool upkeepNeeded, ) = checkUpkeep('');
-        if(!upkeepNeeded){
-            revert Raffle__UpkeepNotNeeded(address(this).balance,s_players.length, uint256(s_raffleState));
+    function performUpkeep(
+        bytes calldata 
+    ) external override {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded) {
+            revert Raffle__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
@@ -109,7 +111,10 @@ abstract contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface{
         emit RequestedFaffleWinner(requestId);
     }
 
-    function fulfillRandomWor(uint256 /*requestId*/, uint256[] memory randomWords) internal /*override */{
+    function fulfillRandomWords(
+        uint256, 
+        uint256[] memory randomWords 
+    ) internal override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
@@ -117,41 +122,41 @@ abstract contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface{
         s_players = new address payable[](0);
         s_lastTimeStamp = block.timestamp;
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
-        if(!success){
+        if (!success) {
             revert Raffle__TransferFailed();
         }
         emit WinnerPicked(recentWinner);
     }
 
-    function getEntranceFee() public view returns(uint256){
+    function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
-    } 
+    }
 
-    function getPlayer(uint256 index) public view returns(address){
+    function getPlayer(uint256 index) public view returns (address) {
         return s_players[index];
     }
 
-    function getRecentWinner() public view returns(address){
+    function getRecentWinner() public view returns (address) {
         return s_recentWinner;
     }
 
-    function getRaffleState() public view returns(RaffleState){
+    function getRaffleState() public view returns (RaffleState) {
         return s_raffleState;
     }
 
-    function getNumWords() public pure returns(uint256){
+    function getNumWords() public pure returns (uint256) {
         return NUM_WORDS;
     }
 
-    function getNumberOfPlayers() public view returns(uint256){
+    function getNumberOfPlayers() public view returns (uint256) {
         return s_players.length;
     }
 
-    function getLatestTimeStamp() public view returns(uint256){
+    function getLatestTimeStamp() public view returns (uint256) {
         return s_lastTimeStamp;
     }
 
-    function getRequestConfirmations() public pure returns(uint256){
+    function getRequestConfirmations() public pure returns (uint256) {
         return REQUEST_CONFIRMATIONS;
     }
 }
