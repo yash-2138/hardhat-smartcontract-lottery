@@ -6,7 +6,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 
 
-error Raffle__NotEnoughEthEnterd();
+error Raffle__NotEnoughEthEntered();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
 error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
@@ -59,7 +59,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
 
     function enterRaffle() public payable {
         if (msg.value < i_entranceFee) {
-            revert Raffle__NotEnoughEthEnterd();
+            revert Raffle__NotEnoughEthEntered();
         }
         if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__NotOpen();
@@ -158,5 +158,9 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
 
     function getRequestConfirmations() public pure returns (uint256) {
         return REQUEST_CONFIRMATIONS;
+    }
+
+    function getInterval() public view returns(uint256){
+        return i_interval;
     }
 }

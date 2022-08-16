@@ -18,6 +18,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         //fund the subscription
         //usually you need the link token  on a real network
         await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, VRF_SUB_FUND_AMOUNT)
+        
     } else {
         vrfCoordinatorV2Address = networkConfig[chainId]["vrfCoordinatorV2"]
         subscriptionId = networkConfig[chainId]["subscriptionId"]
@@ -42,11 +43,17 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         logs: true,
         waitConfirmations: network.config.blockConfirmations || 1,
     })
+    if (developmentChains.includes(network.name)) {
+        const vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
+        await vrfCoordinatorV2Mock.addConsumer(subscriptionId, raffle.address);
     
+        log('Consumer is added');
+      }
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         log("Verifying...")
         await verify(raffle.address, arguments)
     }
+    //for above if https://github.com/smartcontractkit/full-blockchain-solidity-course-js/discussions/1565
 
     log("-----------------------------------------------------------")
 }
