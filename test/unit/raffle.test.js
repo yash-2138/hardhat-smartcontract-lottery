@@ -5,7 +5,7 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
 
 !developmentChains.includes(network.name)
     ?describe.skip
-    :describe("Raffle Unit Tests", async function(){
+    :describe("Raffle Unit Tests",  function(){
         let raffle, vrfCoordinatorV2Mock,raffleEntranceFee, deployer, interval
         const chainId = network.config.chainId
 
@@ -17,7 +17,7 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
             raffleEntranceFee = await raffle.getEntranceFee()
             interval = await raffle.getInterval()
         })
-        describe("Constructor", async function (){
+        describe("Constructor",  function (){
             it("Initializes the raffle correctly", async function(){
                 //Ideally we make our test have only 1 assert per it
                 const raffleState = await  raffle.getRaffleState()
@@ -26,7 +26,7 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                 assert.equal(interval.toString(), networkConfig[chainId]["interval"])
             })
         })
-        describe("enterRaffle", async function(){
+        describe("enterRaffle",  function(){
             it("reverts when you don't pay enough", async function(){
                 await expect(raffle.enterRaffle()).to.be.revertedWith("Raffle__NotEnoughEthEntered")
             })
@@ -48,7 +48,7 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                 await expect(raffle.enterRaffle({value: raffleEntranceFee})).to.be.revertedWith("Raffle__NotOpen")
             })
         })
-        describe("checkUpkeep", async function(){
+        describe("checkUpkeep",  function(){
             it("return false if people havent sent any eth", async function(){
                 await network.provider.send("evm_increaseTime", [interval.toNumber() +1])
                 await network.provider.send("evm_mine", [])
@@ -71,9 +71,9 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
             })
             it("return false if enough time hasnt passed", async function(){
                 await expect(raffle.enterRaffle({value: raffleEntranceFee}))
-                await network.provider.send("evm_increaseTime", [interval.toNumber() - 1])
-                // await network.provider.send("evm_mine",[])
-                await network.provider.request({ method: "evm_mine",params: []})
+                await network.provider.send("evm_increaseTime", [interval.toNumber() - 3])
+                await network.provider.send("evm_mine",[])
+                // await network.provider.request({ method: "evm_mine",params: []})
                 const {upkeepNeeded} = await raffle.callStatic.checkUpkeep([])
                 assert.equal(upkeepNeeded, false)
             })
@@ -84,6 +84,42 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                 const {upkeepNeeded} = await raffle.callStatic.checkUpkeep([])
                 assert.equal(upkeepNeeded, true)
             })
+        })
+        describe("performUpkeep", function(){
+            it("it can only run if checkUpkeep is true", async function(){
+                await raffle.enterRaffle({value: raffleEntranceFee})
+                await network.provider.send("evm_increaseTime", [interval.toNumber() +1])
+                await network.provider.send("evm_mine", [])
+                const tx = await raffle.performUpkeep([])
+                assert(tx)
+            })
+            it("it reverts when checkUpkeep is false", async function(){
+                await expect(raffle.performUpkeep([])).to.be.revertedWith("Raffle__UpkeepNotNeeded")
+            })
+            it("it updates the raffle state,emits an event, calls the vrf coordinator", async function(){
+                await raffle.enterRaffle({value: raffleEntranceFee})
+                await network.provider.send("evm_increaseTime", [interval.toNumber() +1])
+                await network.provider.send("evm_mine", [])
+                const txResponse = await raffle.performUpkeep([])
+                const txReceipt = await txResponse.wait(1)
+                const requestId = txReceipt.events[1].args.requestId  // 1 beacause the 0th event will be of requestRandomWord
+                const raffleState = await raffle.getRaffleState()
+                assert(requestId.toNumber()>0)
+                assert(raffleState.toString() == "1")
+            })
+        })
+        describe("fulfillRandomWords", function() {
+            //befor we do any testing on fulfillRandomWords, we want someone to have entered the lottery, increased the time and a block to be mined
+             beforeEach(async function(){
+                await raffle.enterRaffle({value: raffleEntranceFee})
+                await network.provider.send("evm_increaseTime", [interval.toNumber() + 1])
+                await network.provider.send("evm_mine",[])
+             })
+             //fulfillRandomWords can only be called until there is requestId
+             it("it can only be called after performUpkeep", async function(){
+                await expect(vrfCoordinatorV2Mock.fulfillRandomWords(0,raffle.address)).to.be.revertedWith("nonexistent request")
+                await expect(vrfCoordinatorV2Mock.fulfillRandomWords(1,raffle.address)).to.be.revertedWith("nonexistent request")
+             })
         })
     })
 

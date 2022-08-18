@@ -108,6 +108,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
             i_callbackGasLimit,
             NUM_WORDS
         );
+        // requestRandomWords has it own event that has requestId , so the below line giving requestId int event is redundant
         emit RequestedFaffleWinner(requestId);
     }
 
