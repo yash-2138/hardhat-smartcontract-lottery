@@ -140,6 +140,7 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                     raffle.once("WinnerPicked", async ()=> {
                         //once the winner picked event get fired
                         console.log("Found the event!")
+                        resolve()
                         try{
                             const recentWinner = await raffle.getRecentWinner()
                             console.log(recentWinner)
@@ -159,15 +160,15 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                         }catch(e){
                             reject(e);
                         }
-                        resolve()
-                        done()
+                        
+                        
                     })
                     //setting up the listner
                     //below, we will fire the event,and the listner will pick it up,and resolve
+                    const winnerStartingBalance = await accounts[1].getBalance()
                     const tx = await raffle.performUpkeep([])
                     const txReceipt = await tx.wait(1)
-                    const winnerStartingBalance = await accounts[1].getBalance()
-                    await vrfCoordinatorV2Mock.fulfillRandomWords(tx.recipt.events[1].args.requestId, raffle.address)
+                    await vrfCoordinatorV2Mock.fulfillRandomWords(txReceipt.events[1].args.requestId, raffle.address)
 
                 })
              })
