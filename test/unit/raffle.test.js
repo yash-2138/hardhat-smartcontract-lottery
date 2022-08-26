@@ -158,19 +158,18 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                             console.log(accounts[4].address)
                             console.log(accounts[5].address)
 
-// >>>>>>> a6c3401635badccb625a405a53e31b7d100a1834
                             const raffleState = await raffle.getRaffleState()
                             const endingTimeStamp = await raffle.getLatestTimeStamp()
                             const numPlayers = await raffle.getNumberOfPlayers()
                             const winnersEndingBalance = await accounts[1].getBalance()
                             assert.equal(numPlayers.toString(), "0")
                             assert.equal(raffleState.toString(), "0")
-// <<<<<<< HEAD
+
                             assert.equal(endingTimeStamp > startingTimeStamp)
                             assert.equal(winnersEndingBalance.toString(), winnerStartingBalance.add(raffleEntranceFee.mul(additionalEntrants).add(raffleEntranceFee).toString()))
-// =======
+
                             assert(endingTimeStamp > startingTimeStamp)
-// >>>>>>> a6c3401635badccb625a405a53e31b7d100a1834
+
                         }catch(e){
                             reject(e);
                         }
