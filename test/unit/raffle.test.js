@@ -150,14 +150,6 @@ const {developmentChains, networkConfig} = require("../../helper-hardhat-config"
                             console.log(accounts[1].address)
                             console.log(accounts[3].address)
                             
-// =======
-
-                            console.log(recentWinner)
-                            console.log(accounts[2].address)
-                            console.log(accounts[3].address)
-                            console.log(accounts[4].address)
-                            console.log(accounts[5].address)
-
                             const raffleState = await raffle.getRaffleState()
                             const endingTimeStamp = await raffle.getLatestTimeStamp()
                             const numPlayers = await raffle.getNumberOfPlayers()

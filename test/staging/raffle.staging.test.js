@@ -31,13 +31,14 @@ developmentChains.includes(network.name)
                             const raffleState = await raffle.getRaffleState()
                             const WinnerEndingBalance = await accounts[0].getBalance()
                             const endingTimeStamp = await  raffle.getLatestTimeStamp()
+                            const winnerStartingBalance = await accounts[0].getBalance()
 
                             await expect(raffle.getPlayer(0)).to.be.reverted  //there will not be any object at 0 
                             //another way to see that our players array is reset
                             assert.equal(recentWinner.toString(), accounts[0].address)
-                            assert.equal(raffle.state, 0) 
+                            assert.equal(raffleState.toString(), "0") 
                             assert.equal(WinnerEndingBalance.toString(), winnerStartingBalance.add(raffleEntranceFee).toString())
-                            assert.equal(endingTimeStamp > startingTimeStamp)
+                            assert(endingTimeStamp > startingTimeStamp)
                             resolve()
                         }catch(error){
                             console.log(error)
@@ -48,7 +49,7 @@ developmentChains.includes(network.name)
                     
                     console.log("Entering Raffle...")
                     await raffle.enterRaffle({value: raffleEntranceFee})
-                    const winnerStartingBalance = await accounts[0].getBalance()
+                    
                     //and this code wont run until the listner has finished listning
                 })
                 
