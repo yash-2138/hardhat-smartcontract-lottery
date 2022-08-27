@@ -31,7 +31,6 @@ developmentChains.includes(network.name)
                             const raffleState = await raffle.getRaffleState()
                             const WinnerEndingBalance = await accounts[0].getBalance()
                             const endingTimeStamp = await  raffle.getLatestTimeStamp()
-                            const winnerStartingBalance = await accounts[0].getBalance()
 
                             await expect(raffle.getPlayer(0)).to.be.reverted  //there will not be any object at 0 
                             //another way to see that our players array is reset
@@ -48,7 +47,10 @@ developmentChains.includes(network.name)
                     //then entering the raffle
                     
                     console.log("Entering Raffle...")
-                    await raffle.enterRaffle({value: raffleEntranceFee})
+                    const tx = await raffle.enterRaffle({value: raffleEntranceFee})
+                    await tx.wait(2)
+                    const winnerStartingBalance = await accounts[0].getBalance()
+
                     
                     //and this code wont run until the listner has finished listning
                 })
